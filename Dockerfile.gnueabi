@@ -1,0 +1,44 @@
+FROM debian:buster as build
+
+COPY etc/sources.list.armel /etc/apt/sources.list
+COPY etc/cargo-config.toml /root/.cargo/config
+
+RUN dpkg --add-architecture armel && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        curl git \
+        pkg-config make cmake file ca-certificates g++ \
+        gcc-arm-linux-gnueabi g++-arm-linux-gnueabi \
+        libc6-dev-armel-cross binutils-arm-linux-gnueabi \
+        libudev-dev libudev-dev:armel
+
+ENV PATH=/root/.cargo/bin:$PATH \
+    RUST_TARGETS="arm-unknown-linux-gnueabi" \
+    PKG_CONFIG_ALLOW_CROSS=1 \
+    PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabi/pkgconfig \
+    RUST_BACKTRACE=1
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    rustup target add arm-unknown-linux-gnueabi
+
+# patch co2mon Cargo.toml
+RUN mkdir /src && \
+    cd /src && \
+    git clone https://github.com/lnicola/co2mon && \
+    cd co2mon && \
+    sed -i 's/default = \["linux-static-libusb"\]/default = \["linux-static-hidraw"\]/' co2mon/Cargo.toml
+    #sed -i 's/hidapi = { version = "1.1", default-features = false }//' co2mon/Cargo.toml && \
+    #echo '[dependencies.hidapi]' >> co2mon/Cargo.toml && \
+    #echo 'default-features = false'
+
+COPY Cargo.lock Cargo.toml /project/
+COPY src /project/src
+
+WORKDIR /project
+
+RUN sed -i '/^\[dependencies.co2mon\]/a path = "/src/co2mon/co2mon"\ndefault-features = false\nfeatures = \["linux-static-hidraw"\]' Cargo.toml
+RUN cargo build --release --target=arm-unknown-linux-gnueabi
+
+#FROM alpine:3.12
+
+#COPY --from=build /project/target/
