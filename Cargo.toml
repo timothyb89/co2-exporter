@@ -1,5 +1,5 @@
 [package]
-name = "co2"
+name = "co2-exporter"
 version = "0.1.0"
 authors = ["Tim Buckley <timothyb89@gmail.com>"]
 edition = "2018"
@@ -10,6 +10,11 @@ tokio = { version = "0.2", features = ["macros"] }
 warp = "0.2"
 serde = "1.0"
 serde_json = "1.0"
+log = "0.4.0"
+env_logger = "0.7.1"
+structopt = "0.3"
+
+simple-prometheus-exporter = { git = "https://github.com/timothyb89/simple-prometheus-exporter-rs", tag = "v0.1.0" }
 
 [dependencies.co2mon]
 version = "2.0"

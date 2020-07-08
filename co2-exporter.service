@@ -8,7 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=pi
-ExecStart=/usr/local/bin/co2
+ExecStart=/usr/local/bin/co2-exporter
 
 [Install]
 WantedBy=multi-user.target
